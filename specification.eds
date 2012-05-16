@@ -1,0 +1,9 @@
+instruction = "add": 0x01 address(16) value |
+              "jz": 0x02 address(16) compared(16);
+
+address, value, compared = i: i(16);
+
+%%
+
+"%s %X, %d" = instruction address value;
+"%s %X, [%X]" = instruction address compared;
