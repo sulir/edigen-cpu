@@ -22,8 +22,9 @@ public class EdigenDecoder implements IDecoder {
     public static final int JZ = 2;
     public static final int INSTRUCTION = 3;
     public static final int ADDRESS = 4;
-    public static final int VALUE = 5;
-    public static final int COMPARED = 6;
+    public static final int COMPARED = 5;
+    public static final int TARGET = 6;
+    public static final int VALUE = 7;
 
     
     /**
@@ -104,20 +105,16 @@ public class EdigenDecoder implements IDecoder {
             
             instruction.add(INSTRUCTION, "add", ADD);
             address(start + 8, ADDRESS);
-            address(start + 24, VALUE);
+            value(start + 24);
             break;
         case 0x02:
             unit = read(start + 8, 8);
             
             unit = read(start + 16, 8);
             
-            unit = read(start + 24, 8);
-            
-            unit = read(start + 32, 8);
-            
             instruction.add(INSTRUCTION, "jz", JZ);
-            address(start + 8, ADDRESS);
-            address(start + 24, COMPARED);
+            address(start + 8, COMPARED);
+            address(start + 24, TARGET);
             break;
         default:
             throw new InvalidInstructionException();
@@ -130,6 +127,12 @@ public class EdigenDecoder implements IDecoder {
         unit = read(start + 8, 8);
         
         instruction.add(rule, getValue(start + 0, 16));
+    }
+    
+    private void value(int start) throws InvalidInstructionException {
+        unit = read(start + 0, 8);
+        
+        instruction.add(VALUE, getValue(start + 0, 8));
     }
     
 

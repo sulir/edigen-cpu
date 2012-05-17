@@ -36,21 +36,22 @@ public class EdigenDisassembler extends SimpleDisassembler {
         }
     }
 
-    private static final Map<Set<Integer>, MnemonicFormat> formatMap;
+    private static final boolean LITTLE_ENDIAN = true;
 
+    private static final Map<Set<Integer>, MnemonicFormat> formatMap;
     private IMemoryContext memory;
     private IDecoder decoder;
 
     static {
         String[] formats = {
-          "%s %X, %d", 
-          "%s %X, [%X]"
+          "%s [%X], %d", 
+          "%s [%X], %X"
 
         };
         
         int[][] values = {
             {INSTRUCTION, ADDRESS, VALUE}, 
-            {INSTRUCTION, ADDRESS, COMPARED}
+            {INSTRUCTION, COMPARED, TARGET}
         };
         
         formatMap = new HashMap<Set<Integer>, MnemonicFormat>();
@@ -140,7 +141,7 @@ public class EdigenDisassembler extends SimpleDisassembler {
             if (position == -1 || position == mnemonic.length())
                 break;
             
-            byte[] value = instruction.getBits(ruleCode, false);
+            byte[] value = instruction.getBits(ruleCode, LITTLE_ENDIAN);
             if (value == null)
                 value = instruction.getString(ruleCode).getBytes();
             

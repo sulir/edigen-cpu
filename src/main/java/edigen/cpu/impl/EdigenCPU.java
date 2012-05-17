@@ -6,11 +6,13 @@ package edigen.cpu.impl;
 
 import edigen.cpu.gui.EdigenDisassembler;
 import edigen.cpu.gui.EdigenStatusPanel;
+import static edigen.cpu.impl.EdigenDecoder.*;
 import emulib.plugins.ISettingsHandler;
 import emulib.plugins.cpu.*;
 import emulib.plugins.memory.IMemoryContext;
 import emulib.runtime.Context;
 import emulib.runtime.StaticDialogs;
+import java.nio.ByteBuffer;
 import javax.swing.JPanel;
 
 /**
@@ -173,7 +175,24 @@ public class EdigenCPU extends SimpleCPU {
         try {
             DecodedInstruction in = decoder.decode(PC);
             
-            // TODO
+            switch (in.get(INSTRUCTION)) {
+                case ADD:
+                    // this mess is mainly type conversion
+                    short address = ByteBuffer.wrap(in.getBits(ADDRESS, true)).getShort();
+                    short oldValue = (Short) memory.read(address);
+                    byte addend = in.getBits(VALUE)[0];
+                    
+                    memory.write(address, oldValue + addend);
+                    break;
+                case JZ:
+                    short addressToRead = ByteBuffer.wrap(in.getBits(COMPARED, true)).getShort();
+                    short comparedValue = (Short) memory.read(addressToRead);
+                    
+                    if (comparedValue == 0) {
+                        PC = ByteBuffer.wrap(in.getBits(TARGET, true)).getShort();
+                    }
+                    return;
+            }
             
             PC += in.getLength();
         } catch (InvalidInstructionException ex) {
