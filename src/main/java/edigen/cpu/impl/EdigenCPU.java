@@ -1,6 +1,19 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2012 Matúš Sulír
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 package edigen.cpu.impl;
 
@@ -16,7 +29,7 @@ import java.nio.ByteBuffer;
 import javax.swing.JPanel;
 
 /**
- *
+ * The main CPU plugin class.
  * @author Matúš Sulír
  */
 public class EdigenCPU extends SimpleCPU {
@@ -29,6 +42,10 @@ public class EdigenCPU extends SimpleCPU {
     
     private int PC;
     
+    /**
+     * CPU constructor.
+     * @param pluginID the plugin ID
+     */
     public EdigenCPU(Long pluginID) {
         super(pluginID);
         cpu = new EdigenCPUContext();
@@ -37,6 +54,12 @@ public class EdigenCPU extends SimpleCPU {
             StaticDialogs.showErrorMessage("Could not register the CPU.");
     }
 
+    /**
+     * Associates the plugin with a main memory and creates a decoder, status
+     * panel and disassembler.
+     * @param settings the settings handler
+     * @return true on success, false otherwise
+     */
     @Override
     public boolean initialize(ISettingsHandler settings) {
         super.initialize(settings);
@@ -60,6 +83,10 @@ public class EdigenCPU extends SimpleCPU {
         return true;
     }
 
+    /**
+     * Resets the emulation.
+     * @param address the starting address
+     */
     @Override
     public void reset(int address) {
         super.reset(address);
@@ -70,6 +97,9 @@ public class EdigenCPU extends SimpleCPU {
         fireCpuState();
     }
     
+    /**
+     * Executes one instruction.
+     */
     public void step() {
         if (run_state == RunState.STATE_STOPPED_BREAK) {
             run_state = RunState.STATE_RUNNING;
@@ -87,6 +117,10 @@ public class EdigenCPU extends SimpleCPU {
         }
     }
 
+    /**
+     * Starts executing instructions until a breakpoint is reached or an address
+     * fallout occurs.
+     */
     public void run() {
         run_state = RunState.STATE_RUNNING;
         fireCpuRun(run_state);
@@ -108,20 +142,36 @@ public class EdigenCPU extends SimpleCPU {
         fireCpuRun(run_state);
     }
     
+    /**
+     * Pauses the emulation.
+     */
     public void pause() {
         run_state = RunState.STATE_STOPPED_BREAK;
         fireCpuRun(run_state);
     }
 
+    /**
+     * Stops the emulation.
+     */
     public void stop() {
         run_state = RunState.STATE_STOPPED_NORMAL;
         fireCpuRun(run_state);
     }
 
+    /**
+     * Returns the currently executed instruction position (stored in the PC
+     * register).
+     * @return content of the PC register
+     */
     public int getInstrPosition() {
         return PC;
     }
 
+    /**
+     * Sets the program counter.
+     * @param position the position in memory
+     * @return true on success, false on failure
+     */
     public boolean setInstrPosition(int position) {
         if (position < 0) {
             return false;
@@ -131,46 +181,79 @@ public class EdigenCPU extends SimpleCPU {
         }
     }
 
+    /**
+     * Returns the status GUI.
+     * @return the status panel
+     */
     public JPanel getStatusGUI() {
         return statusPanel;
     }
     
+    /**
+     * Returns the disassembler.
+     * @return the disassembler
+     */
     public IDisassembler getDisassembler() {
         return disassembler;
     }
 
+    /**
+     * Returns the plugin name.
+     * @return the title
+     */
     public String getTitle() {
         return "Edigen CPU";
     }
 
+    /**
+     * Returns the copyright string.
+     * @return the copyright string
+     */
     public String getCopyright() {
         return "Copyright \u00A9 2012, Matúš Sulír";
     }
 
+    /**
+     * Returns the plugin description.
+     * @return the description
+     */
     public String getDescription() {
         return "Very simple CPU to test Edigen functionality";
     }
 
+    /**
+     * Returns the plugin version.
+     * @return the version
+     */
     public String getVersion() {
         return "1.0";
     }
 
+    /**
+     * Called after the emulator is closed.
+     */
     public void destroy() {
         run_state = RunState.STATE_STOPPED_NORMAL;
     }
 
+    /**
+     * This plugin does not support any settings.
+     * @return false
+     */
     public boolean isShowSettingsSupported() {
         return false;
     }
     
+    /**
+     * Not supported.
+     */
     public void showSettings() {
         // none
     }
-
-    public int getPC() {
-        return PC;
-    }
     
+    /**
+     * Emulates one instruction.
+     */
     private void emulateInstruction() {
         try {
             DecodedInstruction in = decoder.decode(PC);
