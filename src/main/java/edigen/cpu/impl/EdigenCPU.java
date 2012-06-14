@@ -100,6 +100,7 @@ public class EdigenCPU extends SimpleCPU {
     /**
      * Executes one instruction.
      */
+    @Override
     public void step() {
         if (run_state == RunState.STATE_STOPPED_BREAK) {
             run_state = RunState.STATE_RUNNING;
@@ -121,6 +122,7 @@ public class EdigenCPU extends SimpleCPU {
      * Starts executing instructions until a breakpoint is reached or an address
      * fallout occurs.
      */
+    @Override
     public void run() {
         run_state = RunState.STATE_RUNNING;
         fireCpuRun(run_state);
@@ -145,6 +147,7 @@ public class EdigenCPU extends SimpleCPU {
     /**
      * Pauses the emulation.
      */
+    @Override
     public void pause() {
         run_state = RunState.STATE_STOPPED_BREAK;
         fireCpuRun(run_state);
@@ -153,6 +156,7 @@ public class EdigenCPU extends SimpleCPU {
     /**
      * Stops the emulation.
      */
+    @Override
     public void stop() {
         run_state = RunState.STATE_STOPPED_NORMAL;
         fireCpuRun(run_state);
@@ -163,6 +167,7 @@ public class EdigenCPU extends SimpleCPU {
      * register).
      * @return content of the PC register
      */
+    @Override
     public int getInstrPosition() {
         return PC;
     }
@@ -172,6 +177,7 @@ public class EdigenCPU extends SimpleCPU {
      * @param position the position in memory
      * @return true on success, false on failure
      */
+    @Override
     public boolean setInstrPosition(int position) {
         if (position < 0) {
             return false;
@@ -185,6 +191,7 @@ public class EdigenCPU extends SimpleCPU {
      * Returns the status GUI.
      * @return the status panel
      */
+    @Override
     public JPanel getStatusGUI() {
         return statusPanel;
     }
@@ -193,6 +200,7 @@ public class EdigenCPU extends SimpleCPU {
      * Returns the disassembler.
      * @return the disassembler
      */
+    @Override
     public IDisassembler getDisassembler() {
         return disassembler;
     }
@@ -201,6 +209,7 @@ public class EdigenCPU extends SimpleCPU {
      * Returns the plugin name.
      * @return the title
      */
+    @Override
     public String getTitle() {
         return "Edigen CPU";
     }
@@ -209,6 +218,7 @@ public class EdigenCPU extends SimpleCPU {
      * Returns the copyright string.
      * @return the copyright string
      */
+    @Override
     public String getCopyright() {
         return "Copyright \u00A9 2012, Matúš Sulír";
     }
@@ -217,6 +227,7 @@ public class EdigenCPU extends SimpleCPU {
      * Returns the plugin description.
      * @return the description
      */
+    @Override
     public String getDescription() {
         return "Very simple CPU to test Edigen functionality";
     }
@@ -225,6 +236,7 @@ public class EdigenCPU extends SimpleCPU {
      * Returns the plugin version.
      * @return the version
      */
+    @Override
     public String getVersion() {
         return "1.0";
     }
@@ -232,6 +244,7 @@ public class EdigenCPU extends SimpleCPU {
     /**
      * Called after the emulator is closed.
      */
+    @Override
     public void destroy() {
         run_state = RunState.STATE_STOPPED_NORMAL;
     }
@@ -240,6 +253,7 @@ public class EdigenCPU extends SimpleCPU {
      * This plugin does not support any settings.
      * @return false
      */
+    @Override
     public boolean isShowSettingsSupported() {
         return false;
     }
@@ -247,6 +261,7 @@ public class EdigenCPU extends SimpleCPU {
     /**
      * Not supported.
      */
+    @Override
     public void showSettings() {
         // none
     }

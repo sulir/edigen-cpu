@@ -30,6 +30,7 @@ public class EdigenCPUContext implements ICPUContext {
      * Interrupts are not supported.
      * @return false
      */
+    @Override
     public boolean isInterruptSupported() {
         return false;
     }
@@ -39,6 +40,7 @@ public class EdigenCPUContext implements ICPUContext {
      * @param device the device
      * @param mask the mask
      */
+    @Override
     public void setInterrupt(IDeviceContext device, int mask) {
         // nothing
     }
@@ -48,6 +50,7 @@ public class EdigenCPUContext implements ICPUContext {
      * @param device the device
      * @param mask the mask
      */
+    @Override
     public void clearInterrupt(IDeviceContext device, int mask) {
         // nothing
     }
@@ -56,6 +59,7 @@ public class EdigenCPUContext implements ICPUContext {
      * Returns the CPU context ID.
      * @return the context ID
      */
+    @Override
     public String getID() {
         return "edigen-cpu-context";
     }
