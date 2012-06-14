@@ -23,8 +23,7 @@ import static edigen.cpu.impl.EdigenDecoder.*;
 import emulib.plugins.ISettingsHandler;
 import emulib.plugins.cpu.*;
 import emulib.plugins.memory.IMemoryContext;
-import emulib.runtime.Context;
-import emulib.runtime.StaticDialogs;
+import emulib.runtime.*;
 import java.nio.ByteBuffer;
 import javax.swing.JPanel;
 
@@ -50,8 +49,16 @@ public class EdigenCPU extends SimpleCPU {
         super(pluginID);
         cpu = new EdigenCPUContext();
         
-        if (!Context.getInstance().register(pluginID, cpu, ICPUContext.class))
-            StaticDialogs.showErrorMessage("Could not register the CPU.");
+        try {
+            if (!Context.getInstance().register(pluginID, cpu, ICPUContext.class))
+                StaticDialogs.showErrorMessage("Could not register the CPU.");
+        } catch (AlreadyRegisteredException ex) {
+            StaticDialogs.showErrorMessage("The context is already registered.");
+        } catch (InvalidImplementationException ex) {
+            StaticDialogs.showErrorMessage("The class does not implement the interface.");
+        } catch (InvalidHashException ex) {
+            StaticDialogs.showErrorMessage("The hash is invalid.");
+        }
     }
 
     /**
