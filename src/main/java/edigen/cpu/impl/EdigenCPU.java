@@ -20,9 +20,10 @@ package edigen.cpu.impl;
 import edigen.cpu.gui.EdigenDisassembler;
 import edigen.cpu.gui.EdigenStatusPanel;
 import static edigen.cpu.impl.EdigenDecoder.*;
-import emulib.plugins.ISettingsHandler;
+import emulib.annotations.PluginType;
+import emulib.emustudio.SettingsManager;
 import emulib.plugins.cpu.*;
-import emulib.plugins.memory.IMemoryContext;
+import emulib.plugins.memory.MemoryContext;
 import emulib.runtime.*;
 import java.nio.ByteBuffer;
 import javax.swing.JPanel;
@@ -31,10 +32,11 @@ import javax.swing.JPanel;
  * The main CPU plugin class.
  * @author Matúš Sulír
  */
-public class EdigenCPU extends SimpleCPU {
+@PluginType(title = "Edigen CPU", copyright = "Copyright \u00A9 2012, Matúš Sulír",
+        version = "1.0", description = "Very simple CPU to test Edigen functionality")
+public class EdigenCPU extends AbstractCPU {
 
-    private EdigenCPUContext cpu;
-    private IMemoryContext memory;
+    private MemoryContext memory;
     private EdigenDecoder decoder;
     private EdigenStatusPanel statusPanel;
     private EdigenDisassembler disassembler;
@@ -47,18 +49,6 @@ public class EdigenCPU extends SimpleCPU {
      */
     public EdigenCPU(Long pluginID) {
         super(pluginID);
-        cpu = new EdigenCPUContext();
-        
-        try {
-            if (!Context.getInstance().register(pluginID, cpu, ICPUContext.class))
-                StaticDialogs.showErrorMessage("Could not register the CPU.");
-        } catch (AlreadyRegisteredException ex) {
-            StaticDialogs.showErrorMessage("The context is already registered.");
-        } catch (InvalidImplementationException ex) {
-            StaticDialogs.showErrorMessage("The class does not implement the interface.");
-        } catch (InvalidHashException ex) {
-            StaticDialogs.showErrorMessage("The hash is invalid.");
-        }
     }
 
     /**
@@ -68,10 +58,10 @@ public class EdigenCPU extends SimpleCPU {
      * @return true on success, false otherwise
      */
     @Override
-    public boolean initialize(ISettingsHandler settings) {
+    public boolean initialize(SettingsManager settings) {
         super.initialize(settings);
         
-        memory = Context.getInstance().getMemoryContext(pluginID, IMemoryContext.class);
+        memory = ContextPool.getInstance().getMemoryContext(pluginID, MemoryContext.class);
         
         if (memory == null) {
             StaticDialogs.showErrorMessage("Could not access memory.");
@@ -114,8 +104,9 @@ public class EdigenCPU extends SimpleCPU {
             emulateInstruction();
             
             try {
-                if (run_state == RunState.STATE_RUNNING)
+                if (run_state == RunState.STATE_RUNNING) {
                     run_state = RunState.STATE_STOPPED_BREAK;
+                }
             } catch (IndexOutOfBoundsException ex) {
                 run_state = RunState.STATE_STOPPED_ADDR_FALLOUT;
             }
@@ -208,44 +199,8 @@ public class EdigenCPU extends SimpleCPU {
      * @return the disassembler
      */
     @Override
-    public IDisassembler getDisassembler() {
+    public Disassembler getDisassembler() {
         return disassembler;
-    }
-
-    /**
-     * Returns the plugin name.
-     * @return the title
-     */
-    @Override
-    public String getTitle() {
-        return "Edigen CPU";
-    }
-
-    /**
-     * Returns the copyright string.
-     * @return the copyright string
-     */
-    @Override
-    public String getCopyright() {
-        return "Copyright \u00A9 2012, Matúš Sulír";
-    }
-
-    /**
-     * Returns the plugin description.
-     * @return the description
-     */
-    @Override
-    public String getDescription() {
-        return "Very simple CPU to test Edigen functionality";
-    }
-
-    /**
-     * Returns the plugin version.
-     * @return the version
-     */
-    @Override
-    public String getVersion() {
-        return "1.0";
     }
 
     /**

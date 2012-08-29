@@ -18,12 +18,11 @@
 package edigen.cpu.gui;
 
 import edigen.cpu.impl.EdigenCPU;
-import emulib.plugins.cpu.ICPU.ICPUListener;
-import emulib.plugins.cpu.ICPU.RunState;
+import emulib.plugins.cpu.CPU.CPUListener;
+import emulib.plugins.cpu.CPU.RunState;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
-import java.util.EventObject;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
@@ -42,9 +41,9 @@ public class EdigenStatusPanel extends JPanel {
     public EdigenStatusPanel(final EdigenCPU cpu) {
         initComponents();
         
-        cpu.addCPUListener(new ICPUListener() {
+        cpu.addCPUListener(new CPUListener() {
             @Override
-            public void runChanged(EventObject evt, RunState runState) {
+            public void runChanged(RunState runState) {
                 switch (runState) {
                     case STATE_STOPPED_NORMAL:
                         statusValue.setText("Stopped");
@@ -62,7 +61,7 @@ public class EdigenStatusPanel extends JPanel {
             }
 
             @Override
-            public void stateUpdated(EventObject evt) {
+            public void stateUpdated() {
                 pcValue.setText(String.format("0x%04X", cpu.getInstrPosition()));
             }
         });
