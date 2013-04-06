@@ -20,6 +20,7 @@ package edigen.cpu.impl;
 import edigen.cpu.gui.EdigenDisassembler;
 import edigen.cpu.gui.EdigenStatusPanel;
 import static edigen.cpu.impl.EdigenDecoder.*;
+import emulib.annotations.PLUGIN_TYPE;
 import emulib.annotations.PluginType;
 import emulib.emustudio.SettingsManager;
 import emulib.plugins.cpu.*;
@@ -32,8 +33,10 @@ import javax.swing.JPanel;
  * The main CPU plugin class.
  * @author Matúš Sulír
  */
-@PluginType(title = "Edigen CPU", copyright = "Copyright \u00A9 2012, Matúš Sulír",
-        version = "1.0", description = "Very simple CPU to test Edigen functionality")
+@PluginType(title = "Edigen CPU",
+        copyright = "Copyright \u00A9 2012, Matúš Sulír",
+        description = "Very simple CPU to test Edigen functionality",
+        type = PLUGIN_TYPE.CPU)
 public class EdigenCPU extends AbstractCPU {
 
     private MemoryContext memory;
@@ -51,6 +54,11 @@ public class EdigenCPU extends AbstractCPU {
         super(pluginID);
     }
 
+    @Override
+    public String getVersion() {
+        return "1.0";
+    }
+    
     /**
      * Associates the plugin with a main memory and creates a decoder, status
      * panel and disassembler.
@@ -61,7 +69,12 @@ public class EdigenCPU extends AbstractCPU {
     public boolean initialize(SettingsManager settings) {
         super.initialize(settings);
         
-        memory = ContextPool.getInstance().getMemoryContext(pluginID, MemoryContext.class);
+        try {
+            memory = ContextPool.getInstance().getMemoryContext(pluginID, MemoryContext.class);
+        } catch (InvalidContextException ex) {
+            StaticDialogs.showErrorMessage("Could not access memory context.");
+            return false;
+        }
         
         if (memory == null) {
             StaticDialogs.showErrorMessage("Could not access memory.");
@@ -89,9 +102,7 @@ public class EdigenCPU extends AbstractCPU {
         super.reset(address);
         
         PC = address;
-        
-        fireCpuRun(run_state);
-        fireCpuState();
+        notifyChange();
     }
     
     /**
@@ -99,20 +110,19 @@ public class EdigenCPU extends AbstractCPU {
      */
     @Override
     public void step() {
-        if (run_state == RunState.STATE_STOPPED_BREAK) {
-            run_state = RunState.STATE_RUNNING;
+        if (runState == RunState.STATE_STOPPED_BREAK) {
+            runState = RunState.STATE_RUNNING;
             emulateInstruction();
             
             try {
-                if (run_state == RunState.STATE_RUNNING) {
-                    run_state = RunState.STATE_STOPPED_BREAK;
+                if (runState == RunState.STATE_RUNNING) {
+                    runState = RunState.STATE_STOPPED_BREAK;
                 }
             } catch (IndexOutOfBoundsException ex) {
-                run_state = RunState.STATE_STOPPED_ADDR_FALLOUT;
+                runState = RunState.STATE_STOPPED_ADDR_FALLOUT;
             }
             
-            fireCpuRun(run_state);
-            fireCpuState();
+            notifyChange();
         }
     }
 
@@ -122,24 +132,23 @@ public class EdigenCPU extends AbstractCPU {
      */
     @Override
     public void run() {
-        run_state = RunState.STATE_RUNNING;
-        fireCpuRun(run_state);
+        runState = RunState.STATE_RUNNING;
+        notifyChange();
         
-        while (run_state == RunState.STATE_RUNNING) {
-            if (getBreakpoint(PC)) {
-                run_state = RunState.STATE_STOPPED_BREAK;
+        while (runState == RunState.STATE_RUNNING) {
+            if (isBreakpointSet(PC)) {
+                runState = RunState.STATE_STOPPED_BREAK;
                 break;
             }
             
             try {
                 emulateInstruction();
             } catch (IndexOutOfBoundsException ex) {
-                run_state = RunState.STATE_STOPPED_ADDR_FALLOUT;
+                runState = RunState.STATE_STOPPED_ADDR_FALLOUT;
             }
         }
         
-        fireCpuState();
-        fireCpuRun(run_state);
+        notifyChange();
     }
     
     /**
@@ -147,8 +156,8 @@ public class EdigenCPU extends AbstractCPU {
      */
     @Override
     public void pause() {
-        run_state = RunState.STATE_STOPPED_BREAK;
-        fireCpuRun(run_state);
+        runState = RunState.STATE_STOPPED_BREAK;
+        notifyCPURunState(runState);
     }
 
     /**
@@ -156,8 +165,8 @@ public class EdigenCPU extends AbstractCPU {
      */
     @Override
     public void stop() {
-        run_state = RunState.STATE_STOPPED_NORMAL;
-        fireCpuRun(run_state);
+        runState = RunState.STATE_STOPPED_NORMAL;
+        notifyCPURunState(runState);
     }
 
     /**
@@ -166,7 +175,7 @@ public class EdigenCPU extends AbstractCPU {
      * @return content of the PC register
      */
     @Override
-    public int getInstrPosition() {
+    public int getInstructionPosition() {
         return PC;
     }
 
@@ -176,7 +185,7 @@ public class EdigenCPU extends AbstractCPU {
      * @return true on success, false on failure
      */
     @Override
-    public boolean setInstrPosition(int position) {
+    public boolean setInstructionPosition(int position) {
         if (position < 0) {
             return false;
         } else {
@@ -186,11 +195,11 @@ public class EdigenCPU extends AbstractCPU {
     }
 
     /**
-     * Returns the status GUI.
+     * Returns the GUI status panel.
      * @return the status panel
      */
     @Override
-    public JPanel getStatusGUI() {
+    public JPanel getStatusPanel() {
         return statusPanel;
     }
     
@@ -208,7 +217,7 @@ public class EdigenCPU extends AbstractCPU {
      */
     @Override
     public void destroy() {
-        run_state = RunState.STATE_STOPPED_NORMAL;
+        runState = RunState.STATE_STOPPED_NORMAL;
     }
 
     /**
@@ -242,7 +251,7 @@ public class EdigenCPU extends AbstractCPU {
                     short oldValue = (Short) memory.read(address);
                     byte addend = in.getBits(VALUE)[0];
                     
-                    memory.write(address, oldValue + addend);
+                    memory.write(address, (short) (oldValue + addend));
                     break;
                 case JZ:
                     short addressToRead = ByteBuffer.wrap(in.getBits(COMPARED, true)).getShort();
@@ -256,7 +265,16 @@ public class EdigenCPU extends AbstractCPU {
             
             PC += in.getLength();
         } catch (InvalidInstructionException ex) {
-            run_state = RunState.STATE_STOPPED_BAD_INSTR;
+            runState = RunState.STATE_STOPPED_BAD_INSTR;
         }
+    }
+    
+    /**
+     * Notifies all listeners about both the run state and the internal CPU
+     * state change.
+     */
+    private void notifyChange() {
+        notifyCPURunState(runState);
+        notifyCPUState();
     }
 }

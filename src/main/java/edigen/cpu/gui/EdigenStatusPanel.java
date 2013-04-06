@@ -62,7 +62,7 @@ public class EdigenStatusPanel extends JPanel {
 
             @Override
             public void stateUpdated() {
-                pcValue.setText(String.format("0x%04X", cpu.getInstrPosition()));
+                pcValue.setText(String.format("0x%04X", cpu.getInstructionPosition()));
             }
         });
     }
